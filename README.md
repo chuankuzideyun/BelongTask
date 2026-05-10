@@ -1,49 +1,24 @@
 # BelongTask
 
-一个基于 Expo + React Native 的移动端音乐奖励应用示例，参考了 Belong mobile app 的基础架构风格。
+BelongTask is a mobile music rewards app built with Expo and React Native. It follows the same high-level patterns used in the Belong mobile app, including file-based routing, store-driven state, and a glassmorphism-style UI.
 
-## 项目特点
+## Highlights
 
-- Expo Router 文件式路由
-- Zustand 状态管理
-- AsyncStorage 本地持久化
-- React Native Track Player 音频播放
-- 玻璃拟态风格 UI
+- Expo Router for navigation
+- Zustand for state management
+- AsyncStorage for local persistence
+- react-native-track-player for real audio playback
+- Glass-style UI components with blur and gradient effects
 
-## 主要功能
+## Features
 
-- Home 页面展示音乐挑战列表
-- Player 页面支持真实音频播放、暂停和进度控制
-- Profile 页面展示累计积分和完成进度
-- Challenge Detail 页面展示单个挑战详情
+- Home screen with a list of music challenges
+- Player modal with play, pause, seek, and progress tracking
+- Profile screen with total points and completion stats
+- Challenge detail screen for individual challenge progress
+- Local persistence for points and completed challenges
 
-## 运行方式
-
-先安装依赖：
-
-```bash
-npm install
-```
-
-启动开发服务：
-
-```bash
-npm run start
-```
-
-如果要运行真实音频播放，需要使用原生开发构建：
-
-```bash
-npx expo run:ios
-```
-
-或
-
-```bash
-npx expo run:android
-```
-
-## 技术栈
+## Tech Stack
 
 - Expo SDK 54
 - React Native
@@ -51,4 +26,35 @@ npx expo run:android
 - Zustand
 - AsyncStorage
 - react-native-track-player
+
+## Getting Started
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the Expo development server:
+
+```bash
+npm run start
+```
+
+To run the app with native audio support, use a development build:
+
+```bash
+npx expo run:ios
+```
+
+or
+
+```bash
+npx expo run:android
+```
+
+## Notes
+
+- Audio playback uses `react-native-track-player`, so it requires a native development build rather than Expo Go.
+- State is persisted locally with AsyncStorage, so points and completion status remain after restarting the app.
 
