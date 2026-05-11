@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GlassCard } from '../../components/ui/GlassCard';
 import { THEME } from '../../constants/theme';
 import { useMusicStore } from '../../stores/musicStore';
@@ -14,7 +14,11 @@ export default function ProfileScreen() {
   const completionRate = challenges.length ? Math.round((completedList.length / challenges.length) * 100) : 0;
 
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <Text style={styles.kicker}>Progress dashboard</Text>
         <Text style={styles.title}>Profile</Text>
@@ -60,19 +64,26 @@ export default function ProfileScreen() {
       </GlassCard>
 
       <Link href="/" asChild>
-        <Text style={styles.link} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
-          Back to Home
-        </Text>
+        <Pressable style={styles.linkButton} hitSlop={8}>
+          <Text style={styles.link} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+            Back to Home
+          </Text>
+        </Pressable>
       </Link>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+    backgroundColor: THEME.colors.background,
+  },
   container: {
     padding: THEME.spacing.lg,
     paddingBottom: 48,
     backgroundColor: THEME.colors.background,
+    flexGrow: 1,
     gap: THEME.spacing.lg,
   },
   header: {
@@ -156,6 +167,11 @@ const styles = StyleSheet.create({
   emptyState: {
     color: THEME.colors.text.secondary,
     lineHeight: 21,
+  },
+  linkButton: {
+    alignSelf: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
   },
   link: {
     color: THEME.colors.primary,

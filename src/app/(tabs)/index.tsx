@@ -26,6 +26,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
+      style={styles.scroll}
       contentContainerStyle={styles.container}
       refreshControl={<RefreshControl refreshing={false} onRefresh={refreshChallenges} tintColor="#fff" />}
       showsVerticalScrollIndicator={false}
@@ -80,10 +81,15 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+    backgroundColor: THEME.colors.background,
+  },
   container: {
     padding: THEME.spacing.lg,
     paddingBottom: 48,
     backgroundColor: THEME.colors.background,
+    flexGrow: 1,
     gap: THEME.spacing.lg,
   },
   hero: {
