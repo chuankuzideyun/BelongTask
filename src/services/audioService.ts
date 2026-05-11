@@ -1,15 +1,30 @@
-import TrackPlayer, { Capability } from 'react-native-track-player';
+import { NativeModules } from 'react-native';
 
 let setupPromise: Promise<void> | null = null;
 
+async function getTrackPlayerModule() {
+  if (!NativeModules.TrackPlayerModule) {
+    return null;
+  }
+
+  return import('react-native-track-player');
+}
+
 export async function ensureTrackPlayerReady() {
+  const trackPlayer = await getTrackPlayerModule();
+  if (!trackPlayer) {
+    throw new Error('Audio playback requires a development build with react-native-track-player installed.');
+  }
+
   if (!setupPromise) {
     setupPromise = (async () => {
-      await TrackPlayer.setupPlayer({
+      const { Capability } = trackPlayer;
+
+      await trackPlayer.default.setupPlayer({
         autoHandleInterruptions: true,
       });
 
-      await TrackPlayer.updateOptions({
+      await trackPlayer.default.updateOptions({
         capabilities: [Capability.Play, Capability.Pause, Capability.Stop, Capability.SeekTo],
         compactCapabilities: [Capability.Play, Capability.Pause, Capability.SeekTo],
       });
@@ -31,8 +46,13 @@ export async function loadSingleTrack(track: {
   duration?: number;
 }) {
   await ensureTrackPlayerReady();
-  await TrackPlayer.reset();
-  await TrackPlayer.add({
+  const trackPlayer = await getTrackPlayerModule();
+  if (!trackPlayer) {
+    throw new Error('Audio playback requires a development build with react-native-track-player installed.');
+  }
+
+  await trackPlayer.default.reset();
+  await trackPlayer.default.add({
     id: track.id,
     url: track.audioUrl,
     title: track.title,
@@ -44,20 +64,37 @@ export async function loadSingleTrack(track: {
 
 export async function playCurrentTrack() {
   await ensureTrackPlayerReady();
-  await TrackPlayer.play();
+  const trackPlayer = await getTrackPlayerModule();
+  if (!trackPlayer) {
+    throw new Error('Audio playback requires a development build with react-native-track-player installed.');
+  }
+
+  await trackPlayer.default.play();
 }
 
 export async function pauseCurrentTrack() {
-  await ensureTrackPlayerReady();
-  await TrackPlayer.pause();
+  const trackPlayer = await getTrackPlayerModule();
+  if (!trackPlayer) {
+    return;
+  }
+
+  await trackPlayer.default.pause();
 }
 
 export async function stopCurrentTrack() {
-  await ensureTrackPlayerReady();
-  await TrackPlayer.stop();
+  const trackPlayer = await getTrackPlayerModule();
+  if (!trackPlayer) {
+    return;
+  }
+
+  await trackPlayer.default.stop();
 }
 
 export async function seekCurrentTrack(seconds: number) {
-  await ensureTrackPlayerReady();
-  await TrackPlayer.seekTo(seconds);
+  const trackPlayer = await getTrackPlayerModule();
+  if (!trackPlayer) {
+    return;
+  }
+
+  await trackPlayer.default.seekTo(seconds);
 }

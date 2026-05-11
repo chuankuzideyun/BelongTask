@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Event, State, useActiveTrack, usePlaybackState, useProgress, useTrackPlayerEvents } from 'react-native-track-player';
+import { NativeModules } from 'react-native';
 import {
   ensureTrackPlayerReady,
   loadSingleTrack,
@@ -26,13 +26,9 @@ export interface UseMusicPlayerReturn {
 }
 
 export function useMusicPlayer(): UseMusicPlayerReturn {
-  const activeTrack = useActiveTrack();
-  const playbackState = usePlaybackState();
-  const progress = useProgress(1000);
   const currentTrack = useMusicStore((state) => state.currentTrack);
   const currentPosition = useMusicStore((state) => state.currentPosition);
   const isPlaying = useMusicStore((state) => state.isPlaying);
-  const challenges = useMusicStore((state) => state.challenges);
   const setCurrentTrack = useMusicStore((state) => state.setCurrentTrack);
   const setPlaying = useMusicStore((state) => state.setPlaying);
   const updateProgress = useMusicStore((state) => state.updateProgress);
@@ -43,105 +39,121 @@ export function useMusicPlayer(): UseMusicPlayerReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const awardedTrackIdRef = useRef<string | null>(null);
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearProgressTimer = useCallback(() => {
+    if (progressTimerRef.current) {
+      clearInterval(progressTimerRef.current);
+      progressTimerRef.current = null;
+    }
+  }, []);
+
+  const finalizeTrack = useCallback(
+    (track: MusicChallenge) => {
+      clearProgressTimer();
+      setPlaying(false);
+
+      if (!completedChallenges.includes(track.id) && awardedTrackIdRef.current !== track.id) {
+        awardedTrackIdRef.current = track.id;
+        markChallengeComplete(track.id);
+        addPoints(track.points);
+        completeChallenge(track.id);
+      }
+    },
+    [addPoints, clearProgressTimer, completeChallenge, completedChallenges, markChallengeComplete, setPlaying],
+  );
 
   useEffect(() => {
-    const activeChallenge = challenges.find((challenge) => challenge.id === activeTrack?.id);
-    if (activeChallenge) {
-      setCurrentTrack(activeChallenge);
-    }
-  }, [activeTrack?.id, challenges, setCurrentTrack]);
+    let mounted = true;
 
-  useEffect(() => {
-    const track =
-      currentTrack ?? challenges.find((challenge) => challenge.id === activeTrack?.id) ?? null;
-    if (!track || !progress.duration) {
-      return;
-    }
+    async function primeTrackPlayer() {
+      if (!NativeModules.TrackPlayerModule) {
+        return;
+      }
 
-    const nextPosition = Math.min(progress.position, progress.duration);
-    const nextProgress = Math.min(100, (nextPosition / progress.duration) * 100);
-
-    updateProgress(track.id, nextProgress);
-    setPlaying(playbackState.state === State.Playing);
-
-    if (
-      progress.duration > 0 &&
-      nextPosition >= progress.duration - 0.25 &&
-      !completedChallenges.includes(track.id) &&
-      awardedTrackIdRef.current !== track.id
-    ) {
-      awardedTrackIdRef.current = track.id;
-      markChallengeComplete(track.id);
-      addPoints(track.points);
-      completeChallenge(track.id);
-    }
-  }, [
-    addPoints,
-    completeChallenge,
-    completedChallenges,
-    currentTrack,
-    playbackState.state,
-    progress.duration,
-    progress.position,
-    setPlaying,
-    activeTrack,
-    markChallengeComplete,
-    updateProgress,
-  ]);
-
-  useTrackPlayerEvents([Event.PlaybackError, Event.PlaybackActiveTrackChanged], async (event) => {
-    if (event.type === Event.PlaybackError) {
-      setError(event.message ?? 'Playback failed');
-      setLoading(false);
-      return;
-    }
-
-    if (event.type === Event.PlaybackActiveTrackChanged && event.track) {
-      const activeChallenge = challenges.find((challenge) => challenge.id === event.track?.id) ?? null;
-      if (activeChallenge) {
-        setCurrentTrack(activeChallenge);
-        updateProgress(activeChallenge.id, 0);
-        awardedTrackIdRef.current = null;
+      try {
+        await ensureTrackPlayerReady();
+      } catch (err) {
+        if (mounted) {
+          setError(err instanceof Error ? err.message : 'Playback failed');
+        }
       }
     }
-  });
+
+    void primeTrackPlayer();
+
+    return () => {
+      mounted = false;
+      clearProgressTimer();
+    };
+  }, [clearProgressTimer]);
+
+  useEffect(() => {
+    if (!isPlaying || !currentTrack) {
+      clearProgressTimer();
+      return;
+    }
+
+    clearProgressTimer();
+    progressTimerRef.current = setInterval(() => {
+      const latestTrack = useMusicStore.getState().currentTrack ?? currentTrack;
+      const latestPosition = useMusicStore.getState().currentPosition;
+      const nextPosition = Math.min(latestTrack.duration, latestPosition + 1);
+      const nextProgress = Math.min(100, (nextPosition / latestTrack.duration) * 100);
+
+      updateProgress(latestTrack.id, nextProgress);
+
+      if (nextPosition >= latestTrack.duration) {
+        finalizeTrack(latestTrack);
+      }
+    }, 1000);
+
+    return clearProgressTimer;
+  }, [clearProgressTimer, currentTrack, finalizeTrack, isPlaying, updateProgress]);
 
   const play = useCallback(
     async (track: MusicChallenge) => {
       try {
         setLoading(true);
         setError(null);
+        clearProgressTimer();
         awardedTrackIdRef.current = completedChallenges.includes(track.id) ? track.id : null;
-        await ensureTrackPlayerReady();
+        if (NativeModules.TrackPlayerModule) {
+          await ensureTrackPlayerReady();
 
-        const shouldReset = activeTrack?.id !== track.id;
+          const shouldReset = currentTrack?.id !== track.id;
 
-        if (shouldReset) {
-          await loadSingleTrack(track);
+          if (shouldReset) {
+            await loadSingleTrack(track);
+          }
+
+          await playCurrentTrack();
+        } else {
+          throw new Error('Audio playback requires a development build with react-native-track-player installed.');
         }
 
         setCurrentTrack(track);
         updateProgress(track.id, track.progress ?? 0);
         setPlaying(true);
-        await playCurrentTrack();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Playback failed');
+        setPlaying(false);
       } finally {
         setLoading(false);
       }
     },
-    [activeTrack?.id, completedChallenges, setCurrentTrack, updateProgress],
+    [clearProgressTimer, completedChallenges, currentTrack?.id, setCurrentTrack, setPlaying, updateProgress],
   );
 
   const pause = useCallback(() => {
+    clearProgressTimer();
     void pauseCurrentTrack();
     setPlaying(false);
-  }, [setPlaying]);
+  }, [clearProgressTimer, setPlaying]);
 
   const seekTo = useCallback(
     (seconds: number) => {
-      const resolvedTrack =
-        currentTrack ?? challenges.find((challenge) => challenge.id === activeTrack?.id) ?? null;
+      const resolvedTrack = currentTrack;
       if (!resolvedTrack) {
         return;
       }
@@ -150,26 +162,23 @@ export function useMusicPlayer(): UseMusicPlayerReturn {
       void seekCurrentTrack(clamped);
       updateProgress(resolvedTrack.id, (clamped / resolvedTrack.duration) * 100);
     },
-    [activeTrack, challenges, currentTrack, updateProgress],
+    [currentTrack, updateProgress],
   );
 
   const stop = useCallback(() => {
+    clearProgressTimer();
     void stopCurrentTrack();
     setPlaying(false);
     setCurrentTrack(null);
     awardedTrackIdRef.current = null;
-  }, [setCurrentTrack, setPlaying]);
-
-  useEffect(() => {
-    void ensureTrackPlayerReady();
-  }, []);
+  }, [clearProgressTimer, setCurrentTrack, setPlaying]);
 
   return useMemo(
     () => ({
-      isPlaying: playbackState.state === State.Playing,
-      currentTrack: currentTrack ?? challenges.find((challenge) => challenge.id === activeTrack?.id) ?? null,
+      isPlaying,
+      currentTrack: currentTrack ?? null,
       currentPosition,
-      duration: currentTrack?.duration ?? progress.duration,
+      duration: currentTrack?.duration ?? 0,
       loading,
       error,
       play,
@@ -178,18 +187,15 @@ export function useMusicPlayer(): UseMusicPlayerReturn {
       stop,
     }),
     [
-      activeTrack,
       currentPosition,
       currentTrack,
       error,
       loading,
       pause,
       play,
-      playbackState.state,
-      progress.duration,
       seekTo,
       stop,
-      challenges,
+      isPlaying,
     ],
   );
 }
