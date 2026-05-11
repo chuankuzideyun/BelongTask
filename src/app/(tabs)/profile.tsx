@@ -60,7 +60,9 @@ export default function ProfileScreen() {
       </GlassCard>
 
       <Link href="/" asChild>
-        <Text style={styles.link}>Back to Home</Text>
+        <Text style={styles.link} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+          Back to Home
+        </Text>
       </Link>
     </ScrollView>
   );
@@ -158,6 +160,8 @@ const styles = StyleSheet.create({
   link: {
     color: THEME.colors.primary,
     fontWeight: '700',
+    fontSize: 12,
     textAlign: 'center',
+    letterSpacing: 0.2,
   },
 });

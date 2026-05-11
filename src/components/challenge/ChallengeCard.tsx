@@ -42,12 +42,16 @@ export function ChallengeCard({ challenge }: ChallengeCardProps) {
       <View style={styles.actions}>
         <Link href={{ pathname: '/challenge-detail', params: { id: challenge.id } }} asChild>
           <Pressable style={styles.secondaryButton}>
-            <Text style={styles.secondaryButtonText}>Details</Text>
+            <Text style={styles.secondaryButtonText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+              Details
+            </Text>
           </Pressable>
         </Link>
         <Link href={{ pathname: '/player', params: { id: challenge.id } }} asChild>
           <Pressable style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Play</Text>
+            <Text style={styles.primaryButtonText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+              Play
+            </Text>
           </Pressable>
         </Link>
       </View>
@@ -82,10 +86,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.2,
   },
   description: {
     color: THEME.colors.text.secondary,
@@ -118,6 +122,7 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: THEME.spacing.sm,
+    marginTop: 10,
   },
   primaryButton: {
     flex: 1,
@@ -130,6 +135,8 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#fff',
     fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 0.2,
   },
   secondaryButton: {
     flex: 1,
@@ -144,5 +151,7 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: THEME.colors.text.primary,
     fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 0.2,
   },
 });

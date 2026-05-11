@@ -27,8 +27,10 @@ export function GlassButton({
         disabled ? styles.disabled : null,
         style,
       ]}
-    >
-      <Text style={styles.text}>{loading ? 'Loading...' : title}</Text>
+      >
+      <Text style={styles.text} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+        {loading ? 'Loading...' : title}
+      </Text>
     </Pressable>
   );
 }
@@ -52,7 +54,8 @@ const styles = StyleSheet.create({
   },
   text: {
     color: THEME.colors.text.primary,
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });

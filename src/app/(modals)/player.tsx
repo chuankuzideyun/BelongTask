@@ -141,11 +141,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: 11,
   },
   close: {
     color: THEME.colors.text.primary,
     fontWeight: '700',
+    fontSize: 12,
   },
   heroCard: {
     padding: THEME.spacing.md,
@@ -190,11 +191,12 @@ const styles = StyleSheet.create({
   },
   controlsCard: {
     padding: THEME.spacing.md,
-    gap: THEME.spacing.md,
+    gap: 10,
   },
   secondaryActions: {
     flexDirection: 'row',
     gap: THEME.spacing.sm,
+    marginTop: 10,
   },
   flexButton: {
     flex: 1,
@@ -209,7 +211,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: THEME.colors.text.primary,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
   },
   helperText: {

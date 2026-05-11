@@ -56,7 +56,14 @@ export default function HomeScreen() {
           <Text style={styles.nowPlayingSubtitle}>{currentTrack.artist}</Text>
           <Link href={{ pathname: '/player', params: { id: currentTrack.id } }} asChild>
             <Pressable style={styles.resumeButton}>
-              <Text style={styles.resumeButtonText}>Open Player</Text>
+              <Text
+                style={styles.resumeButtonText}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+              >
+                Open Player
+              </Text>
             </Pressable>
           </Link>
         </GlassCard>
@@ -158,5 +165,7 @@ const styles = StyleSheet.create({
   resumeButtonText: {
     color: '#fff',
     fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 0.2,
   },
 });
